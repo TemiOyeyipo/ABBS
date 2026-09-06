@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ABBS SIS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-main: #0F172A;
+      --bg-card: #1E293B;
+      --bg-hover: #334155;
+      --accent: #3B82F6;
+      --accent-gradient: linear-gradient(135deg, #2563EB, #1D4ED8);
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border-color: #334155;
+      --radius: 12px;
+      --sidebar-width: 260px;
+    }
+
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Inter', sans-serif; 
+    }
+
+    body { 
+      background-color: var(--bg-main); 
+      color: var(--text-main); 
+      font-size: 16px; 
+      padding-bottom: 70px; 
+      -webkit-text-size-adjust: 100%;
+    }
+
+    .app-header { 
+      background: var(--bg-card); 
+      padding: 12px 16px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border-bottom: 1px solid var(--border-color); 
+      position: sticky; 
+      top: 0; 
+      z-index: 90; 
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-logo { width: 32px; height: 32px; background: var(--accent-gradient); border-radius: 8px; display: grid; place-items: center; font-weight: 700; color: #fff; }
+    .brand-title { font-size: 18px; font-weight: 700; }
+
+    .sidebar { position: fixed; top: 0; left: calc(-1 * var(--sidebar-width)); width: var(--sidebar-width); height: 100vh; background: var(--bg-card); border-right: 1px solid var(--border-color); z-index: 200; transition: left 0.3s ease-in-out; }
+    .sidebar.open { left: 0; }
+    .sidebar-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+    .sidebar-menu { list-style: none; padding: 12px 8px; }
+    .menu-item { display: flex; align-items: center; gap: 14px; padding: 14px 16px; color: var(--text-muted); border-radius: 8px; font-weight: 500; font-size: 15px; cursor: pointer; }
+    .menu-item:hover, .menu-item.active { background: var(--bg-hover); color: var(--text-main); }
+    
+    .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(2px); z-index: 150; display: none; }
+    .overlay.active { display: block; }
+    .container { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+    
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 90; }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; cursor: pointer; }
+    .nav-item i { font-size: 18px; }
+    .nav-item.active { color: var(--accent); }
+    .module-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; }
+
+    /* Mobile Enhancements */
+    @media screen and (max-width: 600px) {
+      body { font-size: 16px; }
+      table, td, th { font-size: 14px !important; }
+      input, select, button { font-size: 15px !important; min-height: 44px; }
+      .text-muted { font-size: 13px !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay for Sidebar & Modals -->
+  <div class="overlay" id="modal-overlay" onclick="closeModal()"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-logo">A</div>
+        <div class="brand-title">ABBS SIS</div>
+      </div>
+      <button onclick="toggleSidebar()" style="background:none; border:none; color:#fff;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li><a id="menu-dashboard" class="menu-item active" onclick="loadModule('Dashboard', 'fa-chart-pie', this)"><i class="fa-solid fa-chart-pie"></i> Dashboard</a></li>
+      <li><a class="menu-item" onclick="loadModule('Programmes', 'fa-sitemap', this)"><i class="fa-solid fa-sitemap"></i> Programmes</a></li>
+      <li><a class="menu-item" onclick="loadModule('Courses', 'fa-book-open', this)"><i class="fa-solid fa-book-open"></i> Courses</a></li>
+      <li><a class="menu-item" onclick="loadModule('Cohorts', 'fa-users-rectangle', this)"><i class="fa-solid fa-users-rectangle"></i> Cohorts</a></li>
+      <li><a class="menu-item" onclick="loadModule('Students', 'fa-user-graduate', this)"><i class="fa-solid fa-user-graduate"></i> Students</a></li>
+      <li><a class="menu-item" onclick="loadModule('Enrolment', 'fa-address-card', this)"><i class="fa-solid fa-address-card"></i> Enrolment</a></li>
+      <li><a class="menu-item" onclick="loadModule('Attendance', 'fa-clipboard-user', this)"><i class="fa-solid fa-clipboard-user"></i> Attendance</a></li>
+      <li><a class="menu-item" onclick="loadModule('Assessment', 'fa-file-signature', this)"><i class="fa-solid fa-file-signature"></i> Assessment</a></li>
+    </ul>
+  </aside>
+
+  <!-- Top App Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <button onclick="toggleSidebar()" style="background:none; border:none; color:#fff; font-size:18px;"><i class="fa-solid fa-bars"></i></button>
+      <div class="brand-title" id="page-title">Dashboard</div>
+    </div>
+  </header>
+
+  <!-- View Outlet -->
+  <main class="container" id="main-content"></main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a class="nav-item active" onclick="loadModule('Dashboard', 'fa-chart-pie')"><i class="fa-solid fa-house"></i><span>Home</span></a>
+    <a class="nav-item" onclick="loadModule('Students', 'fa-user-graduate')"><i class="fa-solid fa-user-graduate"></i><span>Students</span></a>
+    <a class="nav-item" onclick="loadModule('Attendance', 'fa-clipboard-user')"><i class="fa-solid fa-clipboard-user"></i><span>Attendance</span></a>
+    <a class="nav-item" onclick="toggleSidebar()"><i class="fa-solid fa-ellipsis"></i><span>More</span></a>
+  </nav>
+
+  <!-- CORE API INTERFACE ENGINE -->
+  <script>
+    // Replace this URL with your deployed Google Apps Script Web App URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
+
+    // Global helper function for fetching from Code.gs
+    async function apiCall(action, params = {}, method = 'GET') {
+      try {
+        if (method === 'GET') {
+          const query = new URLSearchParams({ action, ...params }).toString();
+          const response = await fetch(`${API_URL}?${query}`);
+          return await response.json();
+        } else if (method === 'POST') {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action, ...params })
+          });
+          return await response.json();
+        }
+      } catch (err) {
+        console.error("API Request Error:", err);
+        return { status: "error", message: err.toString() };
+      }
+    }
+  </script>
+
+  <!-- EXTERNAL JS MODULES FOR GITHUB -->
+  <script src="./js/Dashboard.js"></script>
+  <script src="./js/Programmes.js"></script>
+  <script src="./js/Courses.js"></script>
+  <script src="./js/Cohorts.js"></script>
+  <script src="./js/Students.js"></script>
+  <script src="./js/Enrolment.js"></script>
+  <script src="./js/Assessment.js"></script>
+  <script src="./js/Attendance.js"></script>
+
+  <!-- ROUTING ENGINE -->
+  <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('modal-overlay').classList.toggle('active');
+    }
+
+    function closeModal() {
+      if (document.getElementById('sidebar').classList.contains('open')) {
+        toggleSidebar();
+      }
+    }
+
+    function loadModule(name, iconClass, element) {
+      document.getElementById('page-title').innerText = name;
+      if (element) {
+        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+      }
+      if (document.getElementById('sidebar').classList.contains('open')) toggleSidebar();
+
+      // SAFE QR SCANNER TEARDOWN
+      if (name !== 'Attendance' && window.html5QrcodeScanner) {
+        try {
+          if (typeof window.html5QrcodeScanner.stop === 'function') {
+            window.html5QrcodeScanner.stop().then(() => window.html5QrcodeScanner.clear());
+          } else if (typeof window.html5QrcodeScanner.clear === 'function') {
+            window.html5QrcodeScanner.clear();
+          }
+        } catch (e) {
+          console.warn("Scanner cleanup skipped:", e);
+        }
+        window.html5QrcodeScanner = null;
+      }
+
+      // ROUTER SWITCH
+      if (name === 'Dashboard') {
+        if (typeof renderDashboardView === 'function') renderDashboardView();
+      } else if (name === 'Programmes') {
+        if (typeof renderProgrammesView === 'function') renderProgrammesView();
+      } else if (name === 'Courses') {
+        if (typeof renderCoursesView === 'function') renderCoursesView();
+      } else if (name === 'Cohorts') {
+        if (typeof renderCohortsView === 'function') renderCohortsView();
+      } else if (name === 'Students') {
+        if (typeof renderStudentsView === 'function') renderStudentsView();
+      } else if (name === 'Enrolment') {
+        if (typeof renderEnrolmentView === 'function') renderEnrolmentView();
+      } else if (name === 'Assessment') {
+        if (typeof renderAssessmentView === 'function') renderAssessmentView();
+      } else if (name === 'Attendance') {
+        if (typeof renderAttendanceView === 'function') {
+          renderAttendanceView();
+        } else {
+          console.error("renderAttendanceView is not defined.");
+        }
+      } else {
+        renderPlaceholderView(name, iconClass);
+      }
+    }
+
+    function renderPlaceholderView(name, iconClass) {
+      document.getElementById('main-content').innerHTML = `
+        <div class="module-card" style="text-align: center; padding: 32px 16px;">
+          <i class="fa-solid ${iconClass}" style="font-size: 32px; color: var(--accent); margin-bottom: 12px;"></i>
+          <h3>${name} Module</h3>
+          <p style="color: var(--text-muted); margin-top: 8px;">Ready for remote API communication.</p>
+        </div>
+      `;
+    }
+
+    // Default entry loading Dashboard view
+    window.addEventListener('DOMContentLoaded', () => {
+      const defaultElement = document.getElementById('menu-dashboard');
+      loadModule('Dashboard', 'fa-chart-pie', defaultElement);
+    });
+  </script>
+</body>
+</html>
