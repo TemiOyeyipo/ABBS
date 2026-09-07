@@ -110,19 +110,24 @@ async function renderDashboardView() {
 
 async function fetchDashboardMetricsData() {
   const breakdown = document.getElementById('programme-breakdown-list');
+  const recentContainer = document.getElementById('recent-enrolment-rows');
+
   try {
-    const data = await apiCall('getDashboardMetrics');
-    if (data && data.status !== 'error') {
-      window.dashboardMetricsData = data;
-      populateDashboardView(data);
+    // Calling GET action via apiCall helper (returns data object directly)
+    const metricsData = await apiCall('getDashboardMetrics');
+
+    if (metricsData) {
+      window.dashboardMetricsData = metricsData;
+      populateDashboardView(metricsData);
     } else {
-      if (breakdown) {
-        breakdown.innerHTML = `<p style="color: #EF4444; font-size: 12px; text-align: center;">Error loading data: ${data ? data.message : 'Unknown error'}</p>`;
-      }
+      throw new Error("No data returned from backend.");
     }
   } catch (err) {
     if (breakdown) {
-      breakdown.innerHTML = `<p style="color: #EF4444; font-size: 12px; text-align: center;">Error connecting to API: ${err.message}</p>`;
+      breakdown.innerHTML = `<p style="color: #EF4444; font-size: 12px; text-align: center; padding: 12px;">Error loading metrics: ${err.message}</p>`;
+    }
+    if (recentContainer) {
+      recentContainer.innerHTML = `<tr><td style="color: #EF4444; font-size: 12px; text-align: center; padding: 12px;">Failed to load activities.</td></tr>`;
     }
   }
 }
@@ -136,10 +141,10 @@ function populateDashboardView(data) {
   const kpiProg = document.getElementById('kpi-programmes');
   const kpiCour = document.getElementById('kpi-courses');
 
-  if (kpiStud) kpiStud.innerText = data.totalStudents || 0;
-  if (kpiEnrol) kpiEnrol.innerText = data.totalEnrolments || 0;
-  if (kpiProg) kpiProg.innerText = `${data.activeProgrammes || 0}/${data.totalProgrammes || 0}`;
-  if (kpiCour) kpiCour.innerText = data.totalCourses || 0;
+  if (kpiStud) kpiStud.innerText = data.totalStudents ?? 0;
+  if (kpiEnrol) kpiEnrol.innerText = data.totalEnrolments ?? 0;
+  if (kpiProg) kpiProg.innerText = `${data.activeProgrammes ?? 0}/${data.totalProgrammes ?? 0}`;
+  if (kpiCour) kpiCour.innerText = data.totalCourses ?? 0;
 
   // Render Programme Breakdown
   const progContainer = document.getElementById('programme-breakdown-list');
