@@ -63,7 +63,7 @@
     .overlay.active { display: block; }
     .container { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
     
-    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; justify-style: space-around; align-items: center; z-index: 90; }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--bg-card); border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center; z-index: 90; }
     .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 12px; cursor: pointer; flex: 1; text-align: center; }
     .nav-item i { font-size: 18px; }
     .nav-item.active { color: var(--accent); }
@@ -126,39 +126,39 @@
 
   <!-- CORE API INTERFACE ENGINE -->
   <script>
+    // REPLACE THE URL BELOW WITH YOUR NEW APPS SCRIPT DEPLOYMENT URL
     const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
 
     async function apiCall(action, params = {}, method = 'GET') {
-  try {
-    if (method === 'GET') {
-      const query = new URLSearchParams({ action, ...params }).toString();
-      const response = await fetch(`${API_URL}?${query}`, { redirect: 'follow' });
-      return await response.json();
-    } else if (method === 'POST') {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        redirect: 'follow',
-        body: JSON.stringify({ action, ...params })
-      });
-      return await response.json();
+      try {
+        if (method === 'GET') {
+          const query = new URLSearchParams({ action, ...params }).toString();
+          const response = await fetch(`${API_URL}?${query}`, { redirect: 'follow' });
+          return await response.json();
+        } else if (method === 'POST') {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            redirect: 'follow',
+            body: JSON.stringify({ action, ...params })
+          });
+          return await response.json();
+        }
+      } catch (err) {
+        console.error("API Request Error:", err);
+        return { status: "error", message: err.toString() };
+      }
     }
-  } catch (err) {
-    console.error("API Request Error:", err);
-    return { status: "error", message: err.toString() };
-  }
-}
   </script>
 
-<!-- EXTERNAL JS MODULES FOR GITHUB -->
-<!-- EXTERNAL JS MODULES FOR GITHUB -->
-<script src="./js/Dashboard.js"></script>
-<script src="./js/Programmes.js"></script>
-<script src="./js/Courses.js"></script>
-<script src="./js/Cohorts.js"></script>
-<script src="./js/Students.js"></script>
-<script src="./js/Enrolment.js"></script>
-<script src="./js/Assessment.js"></script>
-<script src="./js/Attendance.js"></script>
+  <!-- EXTERNAL JS MODULES FOR GITHUB -->
+  <script src="./js/Dashboard.js"></script>
+  <script src="./js/Programmes.js"></script>
+  <script src="./js/Courses.js"></script>
+  <script src="./js/Cohorts.js"></script>
+  <script src="./js/Students.js"></script>
+  <script src="./js/Enrolment.js"></script>
+  <script src="./js/Assessment.js"></script>
+  <script src="./js/Attendance.js"></script>
 
   <!-- ROUTING ENGINE -->
   <script>
