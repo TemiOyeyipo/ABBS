@@ -127,28 +127,34 @@
 
   <!-- CORE API INTERFACE ENGINE -->
   <script>
-    // Replace this URL with your deployed Google Apps Script Web App URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
+   const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
 
-    // Global helper function for fetching from Code.gs
-    async function apiCall(action, params = {}, method = 'GET') {
-      try {
-        if (method === 'GET') {
-          const query = new URLSearchParams({ action, ...params }).toString();
-          const response = await fetch(`${API_URL}?${query}`);
-          return await response.json();
-        } else if (method === 'POST') {
-          const response = await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action, ...params })
-          });
-          return await response.json();
-        }
-      } catch (err) {
-        console.error("API Request Error:", err);
-        return { status: "error", message: err.toString() };
-      }
+async function apiCall(action, payload = null) {
+  try {
+    let response;
+    
+    if (!payload) {
+      // GET Request for data retrieval
+      response = await fetch(`${API_URL}?action=${encodeURIComponent(action)}`);
+    } else {
+      // POST Request for sending data
+      response = await fetch(`${API_URL}?action=${encodeURIComponent(action)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight
+        body: JSON.stringify(payload)
+      });
     }
+
+    const resData = await response.json();
+    if (resData.status === 'error') {
+      throw new Error(resData.message);
+    }
+    return resData.data;
+  } catch (error) {
+    console.error(`API Call Error (${action}):`, error);
+    throw error;
+  }
+}
   </script>
 
   <!-- EXTERNAL JS MODULES FOR GITHUB -->
