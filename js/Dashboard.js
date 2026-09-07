@@ -116,15 +116,21 @@ async function fetchDashboardMetricsData() {
   const recentContainer = document.getElementById('recent-enrolment-rows');
 
   try {
-    const metricsData = await apiCall('getDashboardMetrics');
+    // 1. Call the API (returns { status: "success", data: { totalStudents: ..., ... } })
+    const response = await apiCall('getDashboardMetrics');
 
-    if (metricsData) {
+    // 2. Extract the payload safely
+    const metricsData = (response && response.data) ? response.data : response;
+
+    // 3. Verify key metrics exist before rendering
+    if (metricsData && typeof metricsData.totalStudents !== 'undefined') {
       window.dashboardMetricsData = metricsData;
       populateDashboardView(metricsData);
     } else {
-      throw new Error("No data returned from API call.");
+      throw new Error(response.message || "Invalid data structure returned from server.");
     }
   } catch (err) {
+    console.error("Dashboard Fetch Error:", err);
     if (breakdown) {
       breakdown.innerHTML = `<p style="color: #EF4444; font-size: 12px; text-align: center; padding: 12px;">Error loading metrics: ${err.message}</p>`;
     }
