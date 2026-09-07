@@ -116,18 +116,16 @@ async function fetchDashboardMetricsData() {
   const recentContainer = document.getElementById('recent-enrolment-rows');
 
   try {
-    // 1. Call the API (returns { status: "success", data: { totalStudents: ..., ... } })
     const response = await apiCall('getDashboardMetrics');
 
-    // 2. Extract the payload safely
+    // Extract payload safely whether it comes wrapped in response.data or raw
     const metricsData = (response && response.data) ? response.data : response;
 
-    // 3. Verify key metrics exist before rendering
     if (metricsData && typeof metricsData.totalStudents !== 'undefined') {
       window.dashboardMetricsData = metricsData;
       populateDashboardView(metricsData);
     } else {
-      throw new Error(response.message || "Invalid data structure returned from server.");
+      throw new Error((response && response.message) || "Invalid data structure returned from server.");
     }
   } catch (err) {
     console.error("Dashboard Fetch Error:", err);
