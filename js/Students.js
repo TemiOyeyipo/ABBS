@@ -116,21 +116,6 @@ function renderStudentsView() {
     });
 }
 
-/**
- * Formats passport URLs for display.
- * Retains raw Base64 Data URIs or converts old Drive links into viewable thumbnails.
- */
-function formatPassportImage(url) {
-  if (!url) return 'https://via.placeholder.com/150';
-  if (url.startsWith('data:image')) return url; // Direct Base64 payload
-
-  const match = url.match(/id=([a-zA-Z0-9_-]+)/) || url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (match && match[1]) {
-    return `https://lh3.googleusercontent.com/d/${match[1]}=s220`;
-  }
-  return url;
-}
-
 function displayStudentCards(data) {
   const container = document.getElementById('student-list');
   if (!container) return;
@@ -142,7 +127,8 @@ function displayStudentCards(data) {
 
   let html = '';
   data.forEach(item => {
-    const passportUrl = formatPassportImage(item.passport);
+    // Direct Base64 rendering with fallback placeholder
+    const passportUrl = (item.passport && item.passport.trim() !== '') ? item.passport : 'https://via.placeholder.com/150';
     const jsonString = JSON.stringify(item).replace(/'/g, "&apos;");
 
     html += `
@@ -199,9 +185,8 @@ function closeStudentModal() {
 }
 
 /**
- * Compresses uploaded images using an HTML5 Canvas element.
- * Scales down to max 150x150 pixels and outputs high-compression JPEG 
- * to remain safely below Google Sheets' 50,000-character cell limit.
+ * Compresses uploaded image and yields a clean data:image/jpeg;base64,... URI.
+ * Resizes down to max 150x150 at 0.6 quality to stay safe under cell limits.
  */
 function compressAndConvertImage(file, maxWidth, maxHeight, callback) {
   const reader = new FileReader();
@@ -231,7 +216,7 @@ function compressAndConvertImage(file, maxWidth, maxHeight, callback) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
       
-      // JPEG format with 0.6 compression quality yields ~10KB-20KB base64 strings
+      // Output high-compression JPEG Base64 URI directly
       callback(canvas.toDataURL('image/jpeg', 0.6));
     };
   };
@@ -259,7 +244,7 @@ function submitStudent() {
   saveBtn.innerText = "Saving Profile...";
 
   if (fileInput && fileInput.files.length > 0) {
-    // Standard passport dimensions: 150x150 max
+    // Compress and format into standard base64 URI
     compressAndConvertImage(fileInput.files[0], 150, 150, function (base64Uri) {
       form.passportDataUri = base64Uri;
       executeSave(form, saveBtn);
