@@ -3,7 +3,37 @@
  * Handles student listing, filtering, modal registration, image compression, and CRUD operations over API.
  */
 
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec'; // Replace with your Web App URL
+
 let allStudentsData = [];
+
+/**
+ * Universal API Interface Engine
+ * Uses text/plain for POST requests to avoid CORS preflight (OPTIONS) triggers in browsers.
+ */
+function apiCall(action, payload = {}, method = 'GET') {
+  if (method === 'GET') {
+    const queryParams = new URLSearchParams({ action, ...payload }).toString();
+    return fetch(`${SCRIPT_URL}?${queryParams}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      });
+  } 
+
+  if (method === 'POST') {
+    return fetch(`${SCRIPT_URL}?action=${action}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(payload)
+    }).then(res => {
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      return res.json();
+    });
+  }
+}
 
 function renderStudentsView() {
   const contentPanel = document.getElementById('main-content');
