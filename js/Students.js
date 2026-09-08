@@ -116,6 +116,21 @@ function renderStudentsView() {
     });
 }
 
+/**
+ * Formats passport URLs for display.
+ * Retains raw Base64 Data URIs or converts old Drive links into viewable thumbnails.
+ */
+function formatPassportImage(url) {
+  if (!url) return 'https://via.placeholder.com/150';
+  if (url.startsWith('data:image')) return url; // Direct Base64 payload
+
+  const match = url.match(/id=([a-zA-Z0-9_-]+)/) || url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://lh3.googleusercontent.com/d/${match[1]}=s220`;
+  }
+  return url;
+}
+
 function displayStudentCards(data) {
   const container = document.getElementById('student-list');
   if (!container) return;
@@ -127,7 +142,7 @@ function displayStudentCards(data) {
 
   let html = '';
   data.forEach(item => {
-    const passportUrl = item.passport || 'https://via.placeholder.com/150';
+    const passportUrl = formatPassportImage(item.passport);
     const jsonString = JSON.stringify(item).replace(/'/g, "&apos;");
 
     html += `
@@ -183,6 +198,11 @@ function closeStudentModal() {
   document.getElementById('student-modal').style.display = 'none';
 }
 
+/**
+ * Compresses uploaded images using an HTML5 Canvas element.
+ * Scales down to max 150x150 pixels and outputs high-compression JPEG 
+ * to remain safely below Google Sheets' 50,000-character cell limit.
+ */
 function compressAndConvertImage(file, maxWidth, maxHeight, callback) {
   const reader = new FileReader();
   reader.readAsDataURL(file);
@@ -192,17 +212,27 @@ function compressAndConvertImage(file, maxWidth, maxHeight, callback) {
     img.onload = function () {
       let width = img.width;
       let height = img.height;
+      
       if (width > height) {
-        if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+        if (width > maxWidth) { 
+          height = Math.round((height * maxWidth) / width); 
+          width = maxWidth; 
+        }
       } else {
-        if (height > maxHeight) { width = Math.round((width * maxHeight) / height); height = maxHeight; }
+        if (height > maxHeight) { 
+          width = Math.round((width * maxHeight) / height); 
+          height = maxHeight; 
+        }
       }
+      
       const canvas = document.createElement('canvas');
       canvas.width = width; 
       canvas.height = height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, width, height);
-      callback(canvas.toDataURL('image/jpeg', 0.7));
+      
+      // JPEG format with 0.6 compression quality yields ~10KB-20KB base64 strings
+      callback(canvas.toDataURL('image/jpeg', 0.6));
     };
   };
 }
@@ -229,7 +259,8 @@ function submitStudent() {
   saveBtn.innerText = "Saving Profile...";
 
   if (fileInput && fileInput.files.length > 0) {
-    compressAndConvertImage(fileInput.files[0], 200, 200, function (base64Uri) {
+    // Standard passport dimensions: 150x150 max
+    compressAndConvertImage(fileInput.files[0], 150, 150, function (base64Uri) {
       form.passportDataUri = base64Uri;
       executeSave(form, saveBtn);
     });
