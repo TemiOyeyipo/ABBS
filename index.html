@@ -124,31 +124,37 @@
     <a class="nav-item" onclick="toggleSidebar()"><i class="fa-solid fa-ellipsis"></i><span>More</span></a>
   </nav>
 
-  <!-- CORE API INTERFACE ENGINE -->
-  <script>
-    // REPLACE THE URL BELOW WITH YOUR NEW APPS SCRIPT DEPLOYMENT URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
+ <!-- CORE API INTERFACE ENGINE -->
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
 
-    async function apiCall(action, params = {}, method = 'GET') {
-      try {
-        if (method === 'GET') {
-          const query = new URLSearchParams({ action, ...params }).toString();
-          const response = await fetch(`${API_URL}?${query}`, { redirect: 'follow' });
-          return await response.json();
-        } else if (method === 'POST') {
-          const response = await fetch(API_URL, {
-            method: 'POST',
-            redirect: 'follow',
-            body: JSON.stringify({ action, ...params })
-          });
-          return await response.json();
-        }
-      } catch (err) {
-        console.error("API Request Error:", err);
-        return { status: "error", message: err.toString() };
+  /**
+   * Universal API Dispatcher - Bypasses CORS Preflight Restrictions
+   */
+  async function apiCall(action, data = {}) {
+    const payload = { action: action, ...data };
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      
+      if (result.status === 'error' || result.result === 'error') {
+        throw new Error(result.message || "Server processed the request with an error.");
       }
+
+      // Automatically unwrap data for module calls (like Programmes.js)
+      return result.data !== undefined ? result.data : result;
+    } catch (err) {
+      console.error(`[API Call Error - ${action}]:`, err);
+      throw err;
     }
-  </script>
+  }
+</script>
 
   <!-- EXTERNAL JS MODULES FOR GITHUB -->
 <!-- EXTERNAL JS MODULES FOR GITHUB -->
