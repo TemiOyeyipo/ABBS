@@ -69,6 +69,7 @@
     .nav-item.active { color: var(--accent); }
     .module-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; }
 
+    /* Mobile Enhancements */
     @media screen and (max-width: 600px) {
       body { font-size: 16px; }
       table, td, th { font-size: 14px !important; }
@@ -131,7 +132,6 @@
      * Universal API Dispatcher - Clean Payload Handler
      */
     async function apiCall(action, data = {}) {
-      // Safely handle objects or primitives passed into data
       const extraData = (typeof data === 'object' && data !== null) ? data : { value: data };
       const payload = Object.assign({ action: action }, extraData);
 
@@ -204,51 +204,81 @@
         window.html5QrcodeScanner = null;
       }
 
-      // Router Switch - Call both potential function names safely
-      switch (name) {
-        case 'Dashboard':
-          if (typeof renderDashboardView === 'function') renderDashboardView();
-          else if (typeof loadDashboardView === 'function') loadDashboardView();
-          break;
-        case 'Programmes':
-          if (typeof loadProgrammesView === 'function') loadProgrammesView();
-          else if (typeof renderProgrammesView === 'function') renderProgrammesView();
-          break;
-        case 'Courses':
-          if (typeof loadCoursesView === 'function') loadCoursesView();
-          else if (typeof renderCoursesView === 'function') renderCoursesView();
-          break;
-        case 'Cohorts':
-          if (typeof loadCohortsView === 'function') loadCohortsView();
-          else if (typeof renderCohortsView === 'function') renderCohortsView();
-          break;
-        case 'Students':
-          if (typeof loadStudentsView === 'function') loadStudentsView();
-          else if (typeof renderStudentsView === 'function') renderStudentsView();
-          break;
-        case 'Enrolment':
-          if (typeof loadEnrolmentView === 'function') loadEnrolmentView();
-          else if (typeof renderEnrolmentView === 'function') renderEnrolmentView();
-          break;
-        case 'Assessment':
-          if (typeof loadAssessmentView === 'function') loadAssessmentView();
-          else if (typeof renderAssessmentView === 'function') renderAssessmentView();
-          break;
-        case 'Attendance':
-          if (typeof loadAttendanceView === 'function') loadAttendanceView();
-          else if (typeof renderAttendanceView === 'function') renderAttendanceView();
-          break;
-        default:
-          renderPlaceholderView(name, iconClass);
+      // Show immediate loading indicator in main container
+      const container = document.getElementById('main-content');
+      container.innerHTML = `
+        <div class="module-card" style="text-align: center; padding: 40px 16px;">
+          <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; color: var(--accent); margin-bottom: 12px;"></i>
+          <p style="color: var(--text-muted);">Loading ${name}...</p>
+        </div>
+      `;
+
+      // Router Switch - Checks all common function name variations
+      try {
+        switch (name) {
+          case 'Dashboard':
+            if (typeof renderDashboardView === 'function') renderDashboardView();
+            else if (typeof loadDashboardView === 'function') loadDashboardView();
+            break;
+
+          case 'Programmes':
+            if (typeof renderProgrammesView === 'function') renderProgrammesView();
+            else if (typeof loadProgrammesView === 'function') loadProgrammesView();
+            else if (typeof window.loadProgrammesView === 'function') window.loadProgrammesView();
+            else renderPlaceholderView(name, iconClass, "Programmes module script function not found in Programmes.js");
+            break;
+
+          case 'Courses':
+            if (typeof renderCoursesView === 'function') renderCoursesView();
+            else if (typeof loadCoursesView === 'function') loadCoursesView();
+            break;
+
+          case 'Cohorts':
+            if (typeof renderCohortsView === 'function') renderCohortsView();
+            else if (typeof loadCohortsView === 'function') loadCohortsView();
+            break;
+
+          case 'Students':
+            if (typeof renderStudentsView === 'function') renderStudentsView();
+            else if (typeof loadStudentsView === 'function') loadStudentsView();
+            break;
+
+          case 'Enrolment':
+            if (typeof renderEnrolmentView === 'function') renderEnrolmentView();
+            else if (typeof loadEnrolmentView === 'function') loadEnrolmentView();
+            break;
+
+          case 'Assessment':
+            if (typeof renderAssessmentView === 'function') renderAssessmentView();
+            else if (typeof loadAssessmentView === 'function') loadAssessmentView();
+            break;
+
+          case 'Attendance':
+            if (typeof renderAttendanceView === 'function') renderAttendanceView();
+            else if (typeof loadAttendanceView === 'function') loadAttendanceView();
+            break;
+
+          default:
+            renderPlaceholderView(name, iconClass);
+        }
+      } catch (err) {
+        console.error(`Error rendering module ${name}:`, err);
+        container.innerHTML = `
+          <div class="module-card" style="text-align: center; padding: 32px 16px; border: 1px solid #EF4444;">
+            <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; color: #EF4444; margin-bottom: 12px;"></i>
+            <h3>Failed to load ${name}</h3>
+            <p style="color: var(--text-muted); margin-top: 8px;">${err.message || err}</p>
+          </div>
+        `;
       }
     }
 
-    function renderPlaceholderView(name, iconClass) {
+    function renderPlaceholderView(name, iconClass, customMsg) {
       document.getElementById('main-content').innerHTML = `
         <div class="module-card" style="text-align: center; padding: 32px 16px;">
           <i class="fa-solid ${iconClass}" style="font-size: 32px; color: var(--accent); margin-bottom: 12px;"></i>
           <h3>${name} Module</h3>
-          <p style="color: var(--text-muted); margin-top: 8px;">Ready for remote API communication.</p>
+          <p style="color: var(--text-muted); margin-top: 8px;">${customMsg || "Ready for remote API communication."}</p>
         </div>
       `;
     }
