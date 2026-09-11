@@ -69,7 +69,6 @@
     .nav-item.active { color: var(--accent); }
     .module-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius); padding: 16px; }
 
-    /* Mobile Enhancements */
     @media screen and (max-width: 600px) {
       body { font-size: 16px; }
       table, td, th { font-size: 14px !important; }
@@ -124,48 +123,48 @@
     <a class="nav-item" onclick="toggleSidebar()"><i class="fa-solid fa-ellipsis"></i><span>More</span></a>
   </nav>
 
- <!-- CORE API INTERFACE ENGINE -->
-<script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
+  <!-- CORE API INTERFACE ENGINE -->
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
 
-  /**
-   * Universal API Dispatcher - Bypasses CORS Preflight Restrictions
-   */
-  async function apiCall(action, data = {}) {
-    const payload = { action: action, ...data };
+    /**
+     * Universal API Dispatcher - Clean Payload Handler
+     */
+    async function apiCall(action, data = {}) {
+      // Safely handle objects or primitives passed into data
+      const extraData = (typeof data === 'object' && data !== null) ? data : { value: data };
+      const payload = Object.assign({ action: action }, extraData);
 
-    try {
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      });
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload)
+        });
 
-      const result = await response.json();
-      
-      if (result.status === 'error' || result.result === 'error') {
-        throw new Error(result.message || "Server processed the request with an error.");
+        const result = await response.json();
+        
+        if (result.status === 'error' || result.result === 'error') {
+          throw new Error(result.message || "Server processed the request with an error.");
+        }
+
+        return result.data !== undefined ? result.data : result;
+      } catch (err) {
+        console.error(`[API Call Error - ${action}]:`, err);
+        throw err;
       }
-
-      // Automatically unwrap data for module calls (like Programmes.js)
-      return result.data !== undefined ? result.data : result;
-    } catch (err) {
-      console.error(`[API Call Error - ${action}]:`, err);
-      throw err;
     }
-  }
-</script>
+  </script>
 
   <!-- EXTERNAL JS MODULES FOR GITHUB -->
-<!-- EXTERNAL JS MODULES FOR GITHUB -->
-<script src="./js/Dashboard.js"></script>
-<script src="./js/Programmes.js"></script>
-<script src="./js/Courses.js"></script>
-<script src="./js/Cohorts.js"></script>
-<script src="./js/Students.js"></script>
-<script src="./js/Enrolment.js"></script>
-<script src="./js/Assessment.js"></script>
-<script src="./js/Attendance.js"></script>
+  <script src="./js/Dashboard.js"></script>
+  <script src="./js/Programmes.js"></script>
+  <script src="./js/Courses.js"></script>
+  <script src="./js/Cohorts.js"></script>
+  <script src="./js/Students.js"></script>
+  <script src="./js/Enrolment.js"></script>
+  <script src="./js/Assessment.js"></script>
+  <script src="./js/Attendance.js"></script>
 
   <!-- ROUTING ENGINE -->
   <script>
@@ -205,35 +204,39 @@
         window.html5QrcodeScanner = null;
       }
 
-      // Router Switch
+      // Router Switch - Call both potential function names safely
       switch (name) {
         case 'Dashboard':
           if (typeof renderDashboardView === 'function') renderDashboardView();
+          else if (typeof loadDashboardView === 'function') loadDashboardView();
           break;
         case 'Programmes':
-          if (typeof renderProgrammesView === 'function') renderProgrammesView();
+          if (typeof loadProgrammesView === 'function') loadProgrammesView();
+          else if (typeof renderProgrammesView === 'function') renderProgrammesView();
           break;
         case 'Courses':
-          if (typeof renderCoursesView === 'function') renderCoursesView();
+          if (typeof loadCoursesView === 'function') loadCoursesView();
+          else if (typeof renderCoursesView === 'function') renderCoursesView();
           break;
         case 'Cohorts':
-          if (typeof renderCohortsView === 'function') renderCohortsView();
+          if (typeof loadCohortsView === 'function') loadCohortsView();
+          else if (typeof renderCohortsView === 'function') renderCohortsView();
           break;
         case 'Students':
-          if (typeof renderStudentsView === 'function') renderStudentsView();
+          if (typeof loadStudentsView === 'function') loadStudentsView();
+          else if (typeof renderStudentsView === 'function') renderStudentsView();
           break;
         case 'Enrolment':
-          if (typeof renderEnrolmentView === 'function') renderEnrolmentView();
+          if (typeof loadEnrolmentView === 'function') loadEnrolmentView();
+          else if (typeof renderEnrolmentView === 'function') renderEnrolmentView();
           break;
         case 'Assessment':
-          if (typeof renderAssessmentView === 'function') renderAssessmentView();
+          if (typeof loadAssessmentView === 'function') loadAssessmentView();
+          else if (typeof renderAssessmentView === 'function') renderAssessmentView();
           break;
         case 'Attendance':
-          if (typeof renderAttendanceView === 'function') {
-            renderAttendanceView();
-          } else {
-            console.error("renderAttendanceView is not defined.");
-          }
+          if (typeof loadAttendanceView === 'function') loadAttendanceView();
+          else if (typeof renderAttendanceView === 'function') renderAttendanceView();
           break;
         default:
           renderPlaceholderView(name, iconClass);
