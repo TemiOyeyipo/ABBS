@@ -124,47 +124,48 @@
     <a class="nav-item" onclick="toggleSidebar()"><i class="fa-solid fa-ellipsis"></i><span>More</span></a>
   </nav>
 
-  <!-- CORE API INTERFACE ENGINE -->
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
+ <!-- CORE API INTERFACE ENGINE -->
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbwDfcAR9PDzdiJPhTXUvYWljY_GALosTYcvzypVUB6ydUrtVQczxyikxwdOqPp0Qrs5/exec";
 
-    /**
-     * Universal API Dispatcher - Clean Payload Handler
-     */
-    async function apiCall(action, data = {}) {
-      const extraData = (typeof data === 'object' && data !== null) ? data : { value: data };
-      const payload = Object.assign({ action: action }, extraData);
+  /**
+   * Universal API Dispatcher - Bypasses CORS Preflight Restrictions
+   */
+  async function apiCall(action, data = {}) {
+    const payload = { action: action, ...data };
 
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify(payload)
-        });
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
 
-        const result = await response.json();
-        
-        if (result.status === 'error' || result.result === 'error') {
-          throw new Error(result.message || "Server processed the request with an error.");
-        }
-
-        return result.data !== undefined ? result.data : result;
-      } catch (err) {
-        console.error(`[API Call Error - ${action}]:`, err);
-        throw err;
+      const result = await response.json();
+      
+      if (result.status === 'error' || result.result === 'error') {
+        throw new Error(result.message || "Server processed the request with an error.");
       }
+
+      // Automatically unwrap data for module calls (like Programmes.js)
+      return result.data !== undefined ? result.data : result;
+    } catch (err) {
+      console.error(`[API Call Error - ${action}]:`, err);
+      throw err;
     }
-  </script>
+  }
+</script>
 
   <!-- EXTERNAL JS MODULES FOR GITHUB -->
-  <script src="./js/Dashboard.js"></script>
-  <script src="./js/Programmes.js"></script>
-  <script src="./js/Courses.js"></script>
-  <script src="./js/Cohorts.js"></script>
-  <script src="./js/Students.js"></script>
-  <script src="./js/Enrolment.js"></script>
-  <script src="./js/Assessment.js"></script>
-  <script src="./js/Attendance.js"></script>
+<!-- EXTERNAL JS MODULES FOR GITHUB -->
+<script src="./js/Dashboard.js"></script>
+<script src="./js/Programmes.js"></script>
+<script src="./js/Courses.js"></script>
+<script src="./js/Cohorts.js"></script>
+<script src="./js/Students.js"></script>
+<script src="./js/Enrolment.js"></script>
+<script src="./js/Assessment.js"></script>
+<script src="./js/Attendance.js"></script>
 
   <!-- ROUTING ENGINE -->
   <script>
@@ -204,81 +205,47 @@
         window.html5QrcodeScanner = null;
       }
 
-      // Show immediate loading indicator in main container
-      const container = document.getElementById('main-content');
-      container.innerHTML = `
-        <div class="module-card" style="text-align: center; padding: 40px 16px;">
-          <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 32px; color: var(--accent); margin-bottom: 12px;"></i>
-          <p style="color: var(--text-muted);">Loading ${name}...</p>
-        </div>
-      `;
-
-      // Router Switch - Checks all common function name variations
-      try {
-        switch (name) {
-          case 'Dashboard':
-            if (typeof renderDashboardView === 'function') renderDashboardView();
-            else if (typeof loadDashboardView === 'function') loadDashboardView();
-            break;
-
-          case 'Programmes':
-            if (typeof renderProgrammesView === 'function') renderProgrammesView();
-            else if (typeof loadProgrammesView === 'function') loadProgrammesView();
-            else if (typeof window.loadProgrammesView === 'function') window.loadProgrammesView();
-            else renderPlaceholderView(name, iconClass, "Programmes module script function not found in Programmes.js");
-            break;
-
-          case 'Courses':
-            if (typeof renderCoursesView === 'function') renderCoursesView();
-            else if (typeof loadCoursesView === 'function') loadCoursesView();
-            break;
-
-          case 'Cohorts':
-            if (typeof renderCohortsView === 'function') renderCohortsView();
-            else if (typeof loadCohortsView === 'function') loadCohortsView();
-            break;
-
-          case 'Students':
-            if (typeof renderStudentsView === 'function') renderStudentsView();
-            else if (typeof loadStudentsView === 'function') loadStudentsView();
-            break;
-
-          case 'Enrolment':
-            if (typeof renderEnrolmentView === 'function') renderEnrolmentView();
-            else if (typeof loadEnrolmentView === 'function') loadEnrolmentView();
-            break;
-
-          case 'Assessment':
-            if (typeof renderAssessmentView === 'function') renderAssessmentView();
-            else if (typeof loadAssessmentView === 'function') loadAssessmentView();
-            break;
-
-          case 'Attendance':
-            if (typeof renderAttendanceView === 'function') renderAttendanceView();
-            else if (typeof loadAttendanceView === 'function') loadAttendanceView();
-            break;
-
-          default:
-            renderPlaceholderView(name, iconClass);
-        }
-      } catch (err) {
-        console.error(`Error rendering module ${name}:`, err);
-        container.innerHTML = `
-          <div class="module-card" style="text-align: center; padding: 32px 16px; border: 1px solid #EF4444;">
-            <i class="fa-solid fa-triangle-exclamation" style="font-size: 32px; color: #EF4444; margin-bottom: 12px;"></i>
-            <h3>Failed to load ${name}</h3>
-            <p style="color: var(--text-muted); margin-top: 8px;">${err.message || err}</p>
-          </div>
-        `;
+      // Router Switch
+      switch (name) {
+        case 'Dashboard':
+          if (typeof renderDashboardView === 'function') renderDashboardView();
+          break;
+        case 'Programmes':
+          if (typeof renderProgrammesView === 'function') renderProgrammesView();
+          break;
+        case 'Courses':
+          if (typeof renderCoursesView === 'function') renderCoursesView();
+          break;
+        case 'Cohorts':
+          if (typeof renderCohortsView === 'function') renderCohortsView();
+          break;
+        case 'Students':
+          if (typeof renderStudentsView === 'function') renderStudentsView();
+          break;
+        case 'Enrolment':
+          if (typeof renderEnrolmentView === 'function') renderEnrolmentView();
+          break;
+        case 'Assessment':
+          if (typeof renderAssessmentView === 'function') renderAssessmentView();
+          break;
+        case 'Attendance':
+          if (typeof renderAttendanceView === 'function') {
+            renderAttendanceView();
+          } else {
+            console.error("renderAttendanceView is not defined.");
+          }
+          break;
+        default:
+          renderPlaceholderView(name, iconClass);
       }
     }
 
-    function renderPlaceholderView(name, iconClass, customMsg) {
+    function renderPlaceholderView(name, iconClass) {
       document.getElementById('main-content').innerHTML = `
         <div class="module-card" style="text-align: center; padding: 32px 16px;">
           <i class="fa-solid ${iconClass}" style="font-size: 32px; color: var(--accent); margin-bottom: 12px;"></i>
           <h3>${name} Module</h3>
-          <p style="color: var(--text-muted); margin-top: 8px;">${customMsg || "Ready for remote API communication."}</p>
+          <p style="color: var(--text-muted); margin-top: 8px;">Ready for remote API communication.</p>
         </div>
       `;
     }
