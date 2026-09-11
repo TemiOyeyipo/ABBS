@@ -254,13 +254,20 @@ function renderProgrammesView() {
   loadMasterCoursesList();
 }
 
-function loadProgrammesView() {
+// Expose functions globally so index.html can call them freely
+window.loadProgrammesView = function() {
   apiCall('getProgrammesList')
     .then(response => {
-      const data = (response && response.data) ? response.data : response;
+      // Safely handle both unwrapped arrays and raw response objects
+      let data = response;
+      if (response && response.data !== undefined) {
+        data = response.data;
+      }
+      
       if (Array.isArray(data)) {
         renderProgrammesList(data);
       } else {
+        console.warn("getProgrammesList returned non-array:", data);
         renderProgrammesList([]);
       }
     })
@@ -271,12 +278,16 @@ function loadProgrammesView() {
         listContainer.innerHTML = `<div style="text-align: center; color: #EF4444; padding: 20px;">Could not load programmes: ${err.message}</div>`;
       }
     });
-}
+};
 
-function loadMasterCoursesList() {
+window.loadMasterCoursesList = function() {
   apiCall('getAllMasterCourses')
     .then(response => {
-      const courses = (response && response.data) ? response.data : response;
+      let courses = response;
+      if (response && response.data !== undefined) {
+        courses = response.data;
+      }
+      
       window.masterCourses = Array.isArray(courses) ? courses : [];
       populateMasterCoursesDropdown();
     })
@@ -284,8 +295,7 @@ function loadMasterCoursesList() {
       console.error("Failed to fetch master courses:", err);
       populateMasterCoursesDropdown();
     });
-}
-
+};
 function populateMasterCoursesDropdown() {
   const select = document.getElementById('course-dropdown-selector');
   if (!select) return;
